@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-deep: #050505;
+  --bg-surface: #121212;
+  --glass-panel: rgba(20, 20, 20, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: 24px;
+  --accent-primary: #ffffff;
+  --accent-orange: #E07A5F;
+  --accent-blue: #4A90E2;
+  --text-primary: #ffffff;
+  --text-secondary: #A0A0A8;
+  --text-tertiary: #5A5A5E;
+  --radius-lg: 32px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+* {
+  box-sizing: border-box;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  outline: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-deep);
+  background-image: radial-gradient(circle at 50% 30%, #1a1a1a 0%, #000000 70%);
+  color: var(--text-primary);
+}
+
+.handwriting-text {
+  background: linear-gradient(to right, currentColor 50%, transparent 50%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.handwriting-text.animating {
+  animation: writeText var(--animation-duration, 2s) linear forwards;
+}
+
+@keyframes writeText {
+  to {
+    background-position: 0 0;
+  }
+}
+
+.grid-overlay {
+  background-image: 
+    linear-gradient(var(--text-primary) 1px, transparent 1px),
+    linear-gradient(90deg, var(--text-primary) 1px, transparent 1px);
+  background-size: 33.33% 33.33%;
+}
+
+.ruler-track {
+  background-image: linear-gradient(90deg, var(--text-tertiary) 1px, transparent 1px);
+  background-position: center;
+  mask-image: linear-gradient(90deg, transparent, black 20%, black 80%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 20%, black 80%, transparent);
+}
+
+.pill-select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M1%201L5%205L9%201%22%20stroke%3D%22white%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
 }
