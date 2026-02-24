@@ -1,43 +1,32 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useRef, useEffect } from 'react';
+
+const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
+  ssr: false,
+  loading: () => <div className="text-white/60 text-sm">Loading...</div>,
+});
 
 export default function ScriptMotion() {
   const [text, setText] = useState('ScriptMotion');
-  const [font, setFont] = useState('var(--font-pinyon)');
+  const [fontUrl, setFontUrl] = useState('/fonts/BrittanySignature.ttf');
   const [speed, setSpeed] = useState(2);
   const [textColor, setTextColor] = useState('#ffffff');
   const [bgColor, setBgColor] = useState('#1c1c1e');
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
-  const displayTextRef = useRef(null);
-  const speedTrackRef = useRef(null);
-  const isDraggingRef = useRef(false);
-
-  const triggerAnimation = () => {
-    setIsAnimating(false);
-    setTimeout(() => {
-      setIsAnimating(true);
-    }, 10);
-  };
-
-  useEffect(() => {
-    triggerAnimation();
-  }, []);
+  const [playheadKey, setPlayheadKey] = useState(0);
 
   const handleTextChange = (e) => {
     setText(e.target.value || 'ScriptMotion');
-    triggerAnimation();
   };
 
   const handleFontChange = (e) => {
-    setFont(e.target.value);
-    triggerAnimation();
+    setFontUrl(e.target.value);
   };
 
   const handleTextColorChange = (e) => {
     setTextColor(e.target.value);
-    triggerAnimation();
   };
 
   const handleBgColorChange = (e) => {
@@ -45,7 +34,7 @@ export default function ScriptMotion() {
   };
 
   const handleReplay = () => {
-    triggerAnimation();
+    setPlayheadKey((k) => k + 1);
   };
 
   const toggleExportMenu = (e) => {
@@ -87,16 +76,14 @@ export default function ScriptMotion() {
           style={{ background: bgColor }}
         >
           <div className="grid-overlay absolute inset-0 pointer-events-none opacity-10"></div>
-          <div
-            ref={displayTextRef}
-            className={`handwriting-text text-[80px] whitespace-pre relative z-[2] ${isAnimating ? 'animating' : ''}`}
-            style={{
-              fontFamily: font,
-              color: textColor,
-              '--animation-duration': `${speed}s`
-            }}
-          >
-            {text}
+          <div className="relative z-[2] flex items-center justify-center min-h-[200px]">
+            <Penflow
+              text={"hello"}
+              fontUrl={fontUrl}
+              color={textColor}
+              autoReplay={true}
+              speed={1}
+            />
           </div>
         </div>
       </main>
@@ -126,11 +113,10 @@ export default function ScriptMotion() {
               </label>
               <select
                 className="pill-select appearance-none bg-white/5 border border-white/10 text-[var(--text-primary)] px-4 py-2 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-[13px] cursor-pointer transition-all duration-200 min-w-[140px] pr-9 hover:bg-white/10 hover:border-white/20"
-                value={font}
+                value={fontUrl}
                 onChange={handleFontChange}
               >
-                <option value="var(--font-pinyon)">Pinyon Script</option>
-                <option value="var(--font-allura)">Allura Flow</option>
+                <option value="/fonts/BrittanySignature.ttf">Brittany Signature</option>
               </select>
             </div>
 
@@ -151,7 +137,7 @@ export default function ScriptMotion() {
                     style={{ height: speed === level ? '24px' : '16px' }}
                     onClick={() => {
                       setSpeed(level);
-                      triggerAnimation();
+                      setPlayheadKey((k) => k + 1);
                     }}
                   />
                 ))}

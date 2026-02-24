@@ -31,26 +31,6 @@ body {
   color: var(--text-primary);
 }
 
-.handwriting-text {
-  background: linear-gradient(to right, currentColor 50%, transparent 50%);
-  background-size: 200% 100%;
-  background-position: 100% 0;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  transition: all 0.3s ease;
-}
-
-.handwriting-text.animating {
-  animation: writeText var(--animation-duration, 2s) linear forwards;
-}
-
-@keyframes writeText {
-  to {
-    background-position: 0 0;
-  }
-}
-
 .grid-overlay {
   background-image: 
     linear-gradient(var(--text-primary) 1px, transparent 1px),
