@@ -74,7 +74,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://scriptmotion.com",
+    url: "https://scriptmotion.rahll.xyz",
     siteName: "ScriptMotion",
     title: "ScriptMotion - Text to Handwriting Animation Video Generator",
     description: "Convert any text into realistic handwriting animation videos instantly. Choose your font, customize the writing effect, and download as MP4 or GIF in seconds.",
@@ -105,12 +105,12 @@ export const metadata = {
     },
   },
   verification: {
-    google: "your-google-verification-code", // Add your Google Search Console verification code
+    // google: "your-google-verification-code", // Add your Google Search Console verification code
     // yandex: "your-yandex-verification-code",
     // bing: "your-bing-verification-code",
   },
   alternates: {
-    canonical: "https://scriptmotion.com",
+    canonical: "https://scriptmotion.rahll.xyz",
   },
   category: "technology",
 };
@@ -137,7 +137,7 @@ export default function RootLayout({ children }) {
       'No watermark',
       'Instant download',
     ],
-    screenshot: 'https://scriptmotion.com/og-image.png',
+    screenshot: 'https://scriptmotion.rahll.xyz/og-image.png',
   };
 
   return (
