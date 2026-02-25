@@ -1,0 +1,60 @@
+{
+  "fonts": [
+    {
+      "id": "brittany-signature",
+      "name": "Brittany Signature",
+      "filename": "BrittanySignature.ttf",
+      "path": "/fonts/BrittanySignature.ttf",
+      "style": "script",
+      "weight": "normal",
+      "format": "truetype"
+    },
+    {
+      "id": "dancing-script",
+      "name": "Dancing Script",
+      "filename": "DancingScript-VariableFont_wght.ttf",
+      "path": "/fonts/DancingScript-VariableFont_wght.ttf",
+      "style": "script",
+      "weight": "variable",
+      "format": "truetype",
+      "variable": true
+    },
+    {
+      "id": "love-light",
+      "name": "Love Light",
+      "filename": "LoveLight-Regular.ttf",
+      "path": "/fonts/LoveLight-Regular.ttf",
+      "style": "script",
+      "weight": "regular",
+      "format": "truetype"
+    },
+    {
+      "id": "marck-script",
+      "name": "Marck Script",
+      "filename": "MarckScript-Regular.ttf",
+      "path": "/fonts/MarckScript-Regular.ttf",
+      "style": "script",
+      "weight": "regular",
+      "format": "truetype"
+    },
+    {
+      "id": "monsieur-la-doulaise",
+      "name": "Monsieur La Doulaise",
+      "filename": "MonsieurLaDoulaise-Regular.ttf",
+      "path": "/fonts/MonsieurLaDoulaise-Regular.ttf",
+      "style": "script",
+      "weight": "regular",
+      "format": "truetype"
+    },
+    {
+      "id": "playfair-display-italic",
+      "name": "Playfair Display Italic",
+      "filename": "PlayfairDisplay-Italic-VariableFont_wght.ttf",
+      "path": "/fonts/PlayfairDisplay-Italic-VariableFont_wght.ttf",
+      "style": "italic",
+      "weight": "variable",
+      "format": "truetype",
+      "variable": true
+    }
+  ]
+}

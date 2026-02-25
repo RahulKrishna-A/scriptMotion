@@ -17,6 +17,8 @@ export default function ScriptMotion() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [playheadKey, setPlayheadKey] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [fonts, setFonts] = useState([]);
+  const [showFontMenu, setShowFontMenu] = useState(false);
 
   const penflowContainerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -27,8 +29,9 @@ export default function ScriptMotion() {
     setText(newText.slice(0, 39));
   };
 
-  const handleFontChange = (e) => {
-    setFontUrl(e.target.value);
+  const handleFontChange = (path) => {
+    setFontUrl(path);
+    setShowFontMenu(false);
   };
 
   const handleTextColorChange = (e) => {
@@ -152,14 +155,25 @@ export default function ScriptMotion() {
   };
 
   useEffect(() => {
+    // Load fonts from JSON
+    fetch('/fonts/fonts.json')
+      .then(res => res.json())
+      .then(data => setFonts(data.fonts))
+      .catch(err => console.error('Failed to load fonts:', err));
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (showExportMenu && !e.target.closest('.btn-export-group')) {
         setShowExportMenu(false);
       }
+      if (showFontMenu && !e.target.closest('.font-selector-group')) {
+        setShowFontMenu(false);
+      }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [showExportMenu]);
+  }, [showExportMenu, showFontMenu]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -209,12 +223,12 @@ export default function ScriptMotion() {
       </main>
 
       {/* Control Panel */}
-      <section className="w-full max-w-[800px] mx-4 sm:mx-6 md:mx-auto mb-6 sm:mb-8 mt-8 sm:mt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-[var(--glass-panel)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] rounded-[20px] sm:rounded-[var(--radius-lg)] px-4 py-5 sm:px-6 sm:py-6 flex flex-col gap-5 sm:gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.3)] relative z-20">
+<section className="w-full max-w-[800px] mx-4 sm:mx-6 md:mx-auto mb-6 sm:mb-8 mt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-[var(--glass-panel)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] rounded-[var(--radius-lg)] px-4 py-5 sm:px-6 sm:py-6 flex flex-col gap-4 sm:gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.3)] relative z-20">
         {/* Text Input */}
         <div className="relative w-full border-b border-white/10">
           <input
             type="text"
-            className="w-full bg-transparent border-none text-[var(--text-primary)] font-[var(--font-inter)] text-base sm:text-lg font-normal pb-3 resize-none h-11 sm:h-11 min-h-[44px] transition-all duration-200 focus:outline-none placeholder:text-[var(--text-secondary)]"
+            className="w-full bg-transparent border-none text-[var(--text-primary)] font-[var(--font-inter)] text-lg font-normal pb-3 resize-none h-11 transition-all duration-200 focus:outline-none placeholder:text-[var(--text-secondary)]"
             placeholder="Type your text here..."
             autoComplete="off"
             value={text}
@@ -223,37 +237,76 @@ export default function ScriptMotion() {
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-col gap-5 sm:gap-2">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-5 sm:gap-6">
           {/* Settings Cluster */}
-          <div className="flex flex-wrap items-end gap-5 sm:gap-2 flex-1 min-w-0">
+          <div className="flex flex-wrap items-end gap-6 sm:gap-10 flex-1 min-w-0">
             {/* Typography */}
-            <div className="flex flex-col shrink-0 flex-1 min-w-[140px] sm:flex-initial">
-              <label className="font-[var(--font-inter)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-secondary)] mb-2 block">
+            <div className="flex flex-col shrink-0 font-selector-group relative">
+              <label className="font-[var(--font-inter)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-secondary)] mb-1.5 block">
                 Typography
               </label>
-              <select
-                className="pill-select appearance-none bg-white/5 border border-white/10 text-[var(--text-primary)] px-4 py-2.5 sm:py-2 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-[13px] cursor-pointer transition-all duration-200 w-full sm:min-w-[140px] pr-9 hover:bg-white/10 hover:border-white/20 min-h-[44px] sm:min-h-0"
-                value={fontUrl}
-                onChange={handleFontChange}
+              <button
+                className="pill-select appearance-none bg-white/5 border border-white/10 text-[var(--text-primary)] px-4 py-2 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-[13px] cursor-pointer transition-all duration-200 min-w-[180px] pr-9 hover:bg-white/10 hover:border-white/20 text-left flex items-center justify-between"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFontMenu(!showFontMenu);
+                }}
               >
-                <option value="/fonts/BrittanySignature.ttf">Brittany Signature</option>
-              </select>
+                <span className="truncate">
+                  {fonts.find(f => f.path === fontUrl)?.name || 'Brittany Signature'}
+                </span>
+                <svg
+                  className="w-4 h-4 opacity-60 transition-transform duration-200 flex-shrink-0"
+                  style={{ transform: showFontMenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <div
+                className={`absolute bottom-[calc(100%+8px)] left-0 w-full sm:w-[280px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 z-50 max-h-[320px] overflow-y-auto ${showFontMenu
+                  ? 'opacity-100 visible translate-y-0'
+                  : 'opacity-0 invisible translate-y-2.5'
+                  }`}
+              >
+                {fonts.map((font) => (
+                  <button
+                    key={font.id}
+                    className={`block w-full text-left py-2.5 px-3 bg-transparent border-none text-[13px] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 flex flex-col gap-1 ${fontUrl === font.path ? 'bg-white/10 text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'
+                      }`}
+                    onClick={() => handleFontChange(font.path)}
+                  >
+                    <span className="font-[var(--font-inter)] font-medium">{font.name}</span>
+                    <span 
+                      className="text-xl opacity-70"
+                      style={{ fontFamily: `'${font.name}'` }}
+                    >
+                      Aa Bb Cc
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Speed */}
             <div className="flex flex-col shrink-0">
-              <label className="font-[var(--font-inter)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-secondary)] mb-2 block">
+              <label className="font-[var(--font-inter)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-secondary)] mb-1.5 block">
                 Speed
               </label>
-              <div className="flex items-center gap-3 sm:gap-2.5 h-11 sm:h-9">
+              <div className="flex items-center gap-2.5 h-9">
                 {[0.5, 1, 1.5, 2].map((level) => (
                   <button
                     key={level}
-                    className={`speed-bar w-1 sm:w-[3px] rounded-full transition-all duration-200 cursor-pointer border-none touch-manipulation ${speed === level
+                    className={`speed-bar w-[3px] rounded-full transition-all duration-200 cursor-pointer border-none ${speed === level
                       ? 'bg-[var(--accent-orange)] shadow-[0_0_6px_var(--accent-orange)]'
                       : 'bg-[var(--text-tertiary)] hover:bg-[var(--text-secondary)]'
                       }`}
-                    style={{ height: speed === level ? '28px' : '20px' }}
+                    style={{ height: speed === level ? '24px' : '16px' }}
                     onClick={() => {
                       setSpeed(level);
                       setPlayheadKey((k) => k + 1);
@@ -265,12 +318,12 @@ export default function ScriptMotion() {
 
             {/* Palette */}
             <div className="flex flex-col shrink-0">
-              <label className="font-[var(--font-inter)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-secondary)] mb-2 block">
+              <label className="font-[var(--font-inter)] text-[9px] uppercase tracking-[0.12em] text-[var(--text-secondary)] mb-1.5 block">
                 Palette
               </label>
-              <div className="flex gap-3.5 sm:gap-3 items-center h-11 sm:h-9">
+              <div className="flex gap-3 items-center">
                 <button
-                  className="w-11 h-11 sm:w-8 sm:h-8 rounded-full border-2 border-white/20 relative cursor-pointer transition-all duration-200 hover:scale-110 hover:border-[var(--text-primary)] touch-manipulation"
+                  className="w-9 h-9 rounded-full border-2 border-white/20 relative cursor-pointer transition-all duration-200 hover:scale-110 hover:border-[var(--text-primary)]"
                   onClick={() => document.getElementById('textColorPicker').click()}
                   title="Text Color"
                 >
@@ -287,7 +340,7 @@ export default function ScriptMotion() {
                   onChange={handleTextColorChange}
                 />
                 <button
-                  className="w-11 h-11 sm:w-8 sm:h-8 rounded-full border-2 border-white/20 relative cursor-pointer transition-all duration-200 hover:scale-110 hover:border-[var(--text-primary)] touch-manipulation"
+                  className="w-9 h-9 rounded-full border-2 border-white/20 relative cursor-pointer transition-all duration-200 hover:scale-110 hover:border-[var(--text-primary)]"
                   onClick={() => document.getElementById('bgColorPicker').click()}
                   title="Background Color"
                 >
@@ -308,12 +361,12 @@ export default function ScriptMotion() {
           </div>
 
           {/* Actions Cluster */}
-          <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4 pt-0 shrink-0 w-full">
+          <div className="flex items-center justify-end sm:justify-start gap-3 sm:gap-4 pt-1 sm:pt-0 shrink-0">
             <button
-              className="bg-transparent border-none text-[var(--text-secondary)] font-[var(--font-inter)] text-[13px] font-medium cursor-pointer px-4 py-3 sm:px-3 sm:py-2 min-h-[44px] sm:min-h-0 flex items-center gap-2 hover:text-[var(--text-primary)] touch-manipulation flex-1 sm:flex-initial justify-center sm:justify-start"
+              className="bg-transparent border-none text-[var(--text-secondary)] font-[var(--font-inter)] text-[13px] font-medium cursor-pointer px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 flex items-center gap-1.5 hover:text-[var(--text-primary)] touch-manipulation"
               onClick={handleReplay}
             >
-              <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5 stroke-current stroke-2" viewBox="0 0 24 24" fill="none">
+              <svg className="w-3.5 h-3.5 stroke-current stroke-2" viewBox="0 0 24 24" fill="none">
                 <path d="M20 4v5h-5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M4 20v-5h5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M20.49 9A9 9 0 0 0 5.64 5.64L4 9" strokeLinecap="round" strokeLinejoin="round" />
@@ -322,9 +375,9 @@ export default function ScriptMotion() {
               Replay
             </button>
 
-            <div className="btn-export-group relative flex-1 sm:flex-initial">
+            <div className="btn-export-group relative">
               <button
-                className="bg-[var(--text-primary)] text-black border-none h-11 sm:h-10 min-h-[44px] px-5 pl-6 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-all duration-100 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-[0.98] touch-manipulation w-full sm:w-auto"
+                className="bg-[var(--text-primary)] text-black border-none h-11 sm:h-10 min-h-[44px] px-5 pl-6 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-100 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-[0.98] touch-manipulation"
                 onClick={toggleExportMenu}
               >
                 Export
@@ -342,20 +395,20 @@ export default function ScriptMotion() {
                 </svg>
               </button>
               <div
-                className={`absolute bottom-[120%] right-0 w-full sm:w-[220px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[16px] sm:rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${showExportMenu
+                className={`absolute bottom-[120%] right-0 w-[220px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${showExportMenu
                   ? 'opacity-100 visible translate-y-0'
                   : 'opacity-0 invisible translate-y-2.5'
                   }`}
               >
                 <button
-                  className="block w-full text-left py-3 sm:py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0 flex items-center touch-manipulation"
+                  className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handleExportVideo(false)}
                   disabled={isRecording}
                 >
                   {isRecording ? 'Exporting...' : 'Export as Video'}
                 </button>
                 <button
-                  className="block w-full text-left py-3 sm:py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0 flex items-center touch-manipulation"
+                  className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handleExportVideo(true)}
                   disabled={isRecording}
                 >
