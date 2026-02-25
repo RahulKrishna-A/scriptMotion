@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
+import mixpanel from './mixpanel';
 
 const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
   ssr: false,
@@ -25,13 +26,15 @@ export default function ScriptMotion() {
   const recordedChunksRef = useRef([]);
 
   const handleTextChange = (e) => {
-    const newText = e.target.value || 'ScriptMotion';
+    const newText = e.target.value;
     setText(newText.slice(0, 39));
+    setPlayheadKey((k) => k + 1);
   };
 
   const handleFontChange = (path) => {
     setFontUrl(path);
     setShowFontMenu(false);
+    setPlayheadKey((k) => k + 1);
   };
 
   const handleTextColorChange = (e) => {
@@ -129,6 +132,14 @@ export default function ScriptMotion() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         setIsRecording(false);
+        
+        // Track video download
+        mixpanel.track('Video Downloaded', {
+          transparent: transparentBg,
+          textLength: text.length,
+          font: fonts.find(f => f.path === fontUrl)?.name || 'Brittany Signature',
+          speed: speed
+        });
       };
 
       // Start recording
@@ -155,6 +166,11 @@ export default function ScriptMotion() {
   };
 
   useEffect(() => {
+    // Track page view
+    mixpanel.track('Page View', {
+      page: 'ScriptMotion Home'
+    });
+
     // Load fonts from JSON
     fetch('/fonts/fonts.json')
       .then(res => res.json())
@@ -208,7 +224,7 @@ export default function ScriptMotion() {
           style={{ background: bgColor }}
         >
           {/* <div className="grid-overlay absolute inset-0 pointer-events-none opacity-10"></div> */}
-          <div ref={penflowContainerRef} className="relative z-[2] flex items-center justify-center min-h-[180px] sm:min-h-[200px] px-4">
+          <div ref={penflowContainerRef} className="relative z-[2] flex items-center justify-center min-h-[240px] sm:min-h-[280px] px-4 py-8">
             <Penflow
               text={text}
               fontUrl={fontUrl}
