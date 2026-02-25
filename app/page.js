@@ -18,7 +18,8 @@ export default function ScriptMotion() {
   const [playheadKey, setPlayheadKey] = useState(0);
 
   const handleTextChange = (e) => {
-    setText(e.target.value || 'ScriptMotion');
+    const newText = e.target.value || 'ScriptMotion';
+    setText(newText.slice(0, 39));
   };
 
   const handleFontChange = (e) => {
@@ -84,6 +85,7 @@ export default function ScriptMotion() {
               autoReplay={false}
               speed={speed}
               playheadKey={playheadKey}
+              size={84}
             />
           </div>
         </div>
