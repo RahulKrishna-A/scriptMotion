@@ -143,7 +143,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.png" />
         <meta name="theme-color" content="#1c1c1e" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <script

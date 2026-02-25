@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
   ssr: false,
@@ -16,6 +16,11 @@ export default function ScriptMotion() {
   const [bgColor, setBgColor] = useState('#1c1c1e');
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [playheadKey, setPlayheadKey] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const penflowContainerRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
 
   const handleTextChange = (e) => {
     const newText = e.target.value || 'ScriptMotion';
@@ -43,6 +48,109 @@ export default function ScriptMotion() {
     setShowExportMenu(!showExportMenu);
   };
 
+  const handleExportVideo = async (transparentBg = false) => {
+    setShowExportMenu(false);
+
+    if (!penflowContainerRef.current) {
+      alert('Canvas not found');
+      return;
+    }
+
+    // Find the canvas element inside the Penflow component
+    const sourceCanvas = penflowContainerRef.current.querySelector('canvas');
+    if (!sourceCanvas) {
+      alert('Canvas element not found');
+      return;
+    }
+
+    try {
+      let stream;
+
+      if (transparentBg) {
+        // Use the source canvas directly for transparent background
+        stream = sourceCanvas.captureStream(30);
+      } else {
+        // Create a composite canvas with background
+        const compositeCanvas = document.createElement('canvas');
+        compositeCanvas.width = sourceCanvas.width;
+        compositeCanvas.height = sourceCanvas.height;
+        const ctx = compositeCanvas.getContext('2d');
+
+        // Animation loop to draw background + source canvas
+        const drawFrame = () => {
+          // Draw background color
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+
+          // Draw the Penflow canvas on top
+          ctx.drawImage(sourceCanvas, 0, 0);
+
+          if (mediaRecorderRef.current?.state === 'recording') {
+            requestAnimationFrame(drawFrame);
+          }
+        };
+
+        // Start drawing loop
+        requestAnimationFrame(drawFrame);
+
+        // Capture the composite canvas stream
+        stream = compositeCanvas.captureStream(30);
+      }
+
+      recordedChunksRef.current = [];
+
+      // Create MediaRecorder
+      const options = { mimeType: 'video/webm;codecs=vp9' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm';
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const suffix = transparentBg ? '-transparent' : '';
+        a.download = `scriptmotion${suffix}-${Date.now()}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setIsRecording(false);
+      };
+
+      // Start recording
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      // Replay the animation
+      setPlayheadKey((k) => k + 1);
+
+      // Stop recording after animation duration (estimate based on text length and speed)
+      // Adjust this duration based on your animation timing
+      const estimatedDuration = (text.length * 200) / speed; // rough estimate in ms
+      setTimeout(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
+        }
+      }, estimatedDuration + 500); // add buffer time
+
+    } catch (error) {
+      console.error('Error exporting video:', error);
+      alert('Failed to export video: ' + error.message);
+      setIsRecording(false);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showExportMenu && !e.target.closest('.btn-export-group')) {
@@ -52,6 +160,15 @@ export default function ScriptMotion() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showExportMenu]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen w-screen overflow-y-scroll flex flex-col items-center ">
@@ -77,7 +194,7 @@ export default function ScriptMotion() {
           style={{ background: bgColor }}
         >
           {/* <div className="grid-overlay absolute inset-0 pointer-events-none opacity-10"></div> */}
-          <div className="relative z-[2] flex items-center justify-center min-h-[200px]">
+          <div ref={penflowContainerRef} className="relative z-[2] flex items-center justify-center min-h-[200px]">
             <Penflow
               text={text}
               fontUrl={fontUrl}
@@ -92,7 +209,7 @@ export default function ScriptMotion() {
       </main>
 
       {/* Control Panel */}
-      <section className="w-full max-w-[800px] mx-4 sm:mx-6 md:mx-auto mb-6 sm:mb-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-[var(--glass-panel)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] rounded-[var(--radius-lg)] px-4 py-5 sm:px-6 sm:py-6 flex flex-col gap-4 sm:gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.3)] relative z-20">
+      <section className="w-full max-w-[800px] mx-4 sm:mx-6 md:mx-auto mb-6 sm:mb-8 mt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-[var(--glass-panel)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] rounded-[var(--radius-lg)] px-4 py-5 sm:px-6 sm:py-6 flex flex-col gap-4 sm:gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.3)] relative z-20">
         {/* Text Input */}
         <div className="relative w-full border-b border-white/10">
           <input
@@ -133,8 +250,8 @@ export default function ScriptMotion() {
                   <button
                     key={level}
                     className={`speed-bar w-[3px] rounded-full transition-all duration-200 cursor-pointer border-none ${speed === level
-                        ? 'bg-[var(--accent-orange)] shadow-[0_0_6px_var(--accent-orange)]'
-                        : 'bg-[var(--text-tertiary)] hover:bg-[var(--text-secondary)]'
+                      ? 'bg-[var(--accent-orange)] shadow-[0_0_6px_var(--accent-orange)]'
+                      : 'bg-[var(--text-tertiary)] hover:bg-[var(--text-secondary)]'
                       }`}
                     style={{ height: speed === level ? '24px' : '16px' }}
                     onClick={() => {
@@ -225,22 +342,57 @@ export default function ScriptMotion() {
                 </svg>
               </button>
               <div
-                className={`absolute bottom-[120%] right-0 w-[180px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${showExportMenu
-                    ? 'opacity-100 visible translate-y-0'
-                    : 'opacity-0 invisible translate-y-2.5'
+                className={`absolute bottom-[120%] right-0 w-[220px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${showExportMenu
+                  ? 'opacity-100 visible translate-y-0'
+                  : 'opacity-0 invisible translate-y-2.5'
                   }`}
               >
-                <button className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)]">
-                  Export as GIF
+                <button
+                  className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleExportVideo(false)}
+                  disabled={isRecording}
+                >
+                  {isRecording ? 'Exporting...' : 'Export as Video'}
                 </button>
-                <button className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)]">
-                  Export as Video (.mp4)
+                <button
+                  className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleExportVideo(true)}
+                  disabled={isRecording}
+                >
+                  {isRecording ? 'Exporting...' : 'Export as Video (Transparent)'}
                 </button>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Footer Credits */}
+      <footer className="w-full max-w-[800px] mx-auto px-4 pb-8 text-center">
+        <p className="font-[var(--font-inter)] text-[13px] text-[var(--text-secondary)] mb-2">
+          Crafted by{' '}
+          <a 
+            href="https://x.com/RahulKrishnaa28" 
+            target="_blank" 
+            rel="noopener noreferrer"
+
+            className="text-[var(--text-primary)] hover:text-[var(--accent-orange)] hover:underline transition-colors duration-200"
+          >
+            Rahul
+          </a>
+        </p>
+        <p className="font-[var(--font-inter)] text-[13px] text-[var(--text-secondary)]">
+          Inspiration and Penflow package from{' '}
+          <a 
+            href="https://cretu.dev/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[var(--text-primary)] hover:text-[var(--accent-orange)] hover:underline transition-colors duration-200"
+          >
+            Cristi
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
