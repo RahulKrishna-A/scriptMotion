@@ -11,8 +11,8 @@ const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
 export default function ScriptMotion() {
   const [text, setText] = useState('ScriptMotion');
   const [fontUrl, setFontUrl] = useState('/fonts/BrittanySignature.ttf');
-  const [speed, setSpeed] = useState(2);
-  const [textColor, setTextColor] = useState('#ffffff');
+  const [speed, setSpeed] = useState(1);
+  const [textColor, setTextColor] = useState('#ffa200');
   const [bgColor, setBgColor] = useState('#1c1c1e');
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [playheadKey, setPlayheadKey] = useState(0);
@@ -75,14 +75,15 @@ export default function ScriptMotion() {
           className="relative w-full h-full min-h-[300px] rounded-[var(--radius-lg)] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-[var(--glass-border)] flex items-center justify-center transition-all duration-400"
           style={{ background: bgColor }}
         >
-          <div className="grid-overlay absolute inset-0 pointer-events-none opacity-10"></div>
+          {/* <div className="grid-overlay absolute inset-0 pointer-events-none opacity-10"></div> */}
           <div className="relative z-[2] flex items-center justify-center min-h-[200px]">
             <Penflow
-              text={"hello"}
+              text={text}
               fontUrl={fontUrl}
               color={textColor}
-              autoReplay={true}
-              speed={1}
+              autoReplay={false}
+              speed={speed}
+              playheadKey={playheadKey}
             />
           </div>
         </div>
@@ -126,7 +127,7 @@ export default function ScriptMotion() {
                 Speed
               </label>
               <div className="flex items-center gap-2.5 h-9">
-                {[1, 2, 3, 4].map((level) => (
+                {[0.5, 1, 1.5, 2].map((level) => (
                   <button
                     key={level}
                     className={`speed-bar w-[3px] rounded-full transition-all duration-200 cursor-pointer border-none ${
@@ -209,12 +210,18 @@ export default function ScriptMotion() {
                 onClick={toggleExportMenu}
               >
                 Export
-                <span
-                  className="opacity-60 transition-transform duration-200"
+                <svg
+                  className="w-4 h-4 opacity-60 transition-transform duration-200"
                   style={{ transform: showExportMenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  ⌄
-                </span>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
               <div
                 className={`absolute bottom-[120%] right-0 w-[180px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${
