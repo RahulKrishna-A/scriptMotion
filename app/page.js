@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
   ssr: false,
@@ -72,7 +72,7 @@ export default function ScriptMotion() {
 
       {/* Canvas Stage */}
       <main className="flex-grow w-full max-w-[1000px]  flex justify-center items-center relative px-5">
-        <div 
+        <div
           className="relative w-full h-full min-h-[300px] rounded-[var(--radius-lg)] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-[var(--glass-border)] flex items-center justify-center transition-all duration-400"
           style={{ background: bgColor }}
         >
@@ -100,7 +100,7 @@ export default function ScriptMotion() {
             className="w-full bg-transparent border-none text-[var(--text-primary)] font-[var(--font-inter)] text-lg font-normal pb-3 resize-none h-11 transition-all duration-200 focus:outline-none placeholder:text-[var(--text-secondary)]"
             placeholder="Type your text here..."
             autoComplete="off"
-            value={text === 'ScriptMotion' ? '' : text}
+            value={text}
             onChange={handleTextChange}
           />
         </div>
@@ -132,11 +132,10 @@ export default function ScriptMotion() {
                 {[0.5, 1, 1.5, 2].map((level) => (
                   <button
                     key={level}
-                    className={`speed-bar w-[3px] rounded-full transition-all duration-200 cursor-pointer border-none ${
-                      speed === level
+                    className={`speed-bar w-[3px] rounded-full transition-all duration-200 cursor-pointer border-none ${speed === level
                         ? 'bg-[var(--accent-orange)] shadow-[0_0_6px_var(--accent-orange)]'
                         : 'bg-[var(--text-tertiary)] hover:bg-[var(--text-secondary)]'
-                    }`}
+                      }`}
                     style={{ height: speed === level ? '24px' : '16px' }}
                     onClick={() => {
                       setSpeed(level);
@@ -226,11 +225,10 @@ export default function ScriptMotion() {
                 </svg>
               </button>
               <div
-                className={`absolute bottom-[120%] right-0 w-[180px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${
-                  showExportMenu
+                className={`absolute bottom-[120%] right-0 w-[180px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${showExportMenu
                     ? 'opacity-100 visible translate-y-0'
                     : 'opacity-0 invisible translate-y-2.5'
-                }`}
+                  }`}
               >
                 <button className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)]">
                   Export as GIF
