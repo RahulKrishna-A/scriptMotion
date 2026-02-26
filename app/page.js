@@ -133,13 +133,14 @@ export default function ScriptMotion() {
         URL.revokeObjectURL(url);
         setIsRecording(false);
         
-        // Track video download
         mixpanel.track('Video Downloaded', {
           transparent: transparentBg,
           textLength: text.length,
           font: fonts.find(f => f.path === fontUrl)?.name || 'Brittany Signature',
           speed: speed
         });
+        mixpanel.people.increment('videos_exported');
+        mixpanel.people.set({ last_export: new Date().toISOString() });
       };
 
       // Start recording
@@ -393,22 +394,35 @@ export default function ScriptMotion() {
 
             <div className="btn-export-group relative">
               <button
-                className="bg-[var(--text-primary)] text-black border-none h-11 sm:h-10 min-h-[44px] px-5 pl-6 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-100 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-[0.98] touch-manipulation"
+                className="bg-[var(--text-primary)] text-black border-none h-11 sm:h-10 min-h-[44px] px-5 pl-6 rounded-[var(--radius-pill)] font-[var(--font-inter)] text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-100 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                 onClick={toggleExportMenu}
+                disabled={isRecording}
               >
-                Export
-                <svg
-                  className="w-4 h-4 opacity-60 transition-transform duration-200"
-                  style={{ transform: showExportMenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+                {isRecording ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    Export
+                    <svg
+                      className="w-4 h-4 opacity-60 transition-transform duration-200"
+                      style={{ transform: showExportMenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </>
+                )}
               </button>
               <div
                 className={`absolute bottom-[120%] right-0 w-[220px] bg-[#1c1c1e] border border-[var(--glass-border)] rounded-[var(--radius-md)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-200 ${showExportMenu
