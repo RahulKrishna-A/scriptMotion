@@ -24,6 +24,7 @@ export default function ScriptMotion() {
   const penflowContainerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
+  const gifCapturingRef = useRef(false);
 
   const handleTextChange = (e) => {
     const newText = e.target.value;
@@ -52,6 +53,95 @@ export default function ScriptMotion() {
   const toggleExportMenu = (e) => {
     e.stopPropagation();
     setShowExportMenu(!showExportMenu);
+  };
+
+  const handleExportGif = async () => {
+    setShowExportMenu(false);
+
+    if (!penflowContainerRef.current) {
+      alert('Canvas not found');
+      return;
+    }
+
+    const sourceCanvas = penflowContainerRef.current.querySelector('canvas');
+    if (!sourceCanvas) {
+      alert('Canvas element not found');
+      return;
+    }
+
+    try {
+      const { default: GIF } = await import('gif.js');
+
+      const compositeCanvas = document.createElement('canvas');
+      compositeCanvas.width = sourceCanvas.width;
+      compositeCanvas.height = sourceCanvas.height;
+      const ctx = compositeCanvas.getContext('2d');
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: compositeCanvas.width,
+        height: compositeCanvas.height,
+        workerScript: '/gif.worker.js',
+      });
+
+      const fps = 15;
+      const frameDelay = Math.round(1000 / fps);
+      let lastFrameTime = 0;
+
+      gifCapturingRef.current = true;
+      setIsRecording(true);
+
+      const captureFrame = (timestamp) => {
+        if (!gifCapturingRef.current) return;
+
+        if (timestamp - lastFrameTime >= frameDelay) {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+          ctx.drawImage(sourceCanvas, 0, 0);
+          gif.addFrame(compositeCanvas, { delay: frameDelay, copy: true });
+          lastFrameTime = timestamp;
+        }
+
+        requestAnimationFrame(captureFrame);
+      };
+
+      setPlayheadKey((k) => k + 1);
+      requestAnimationFrame(captureFrame);
+
+      const estimatedDuration = (text.length * 200) / speed;
+      setTimeout(() => {
+        gifCapturingRef.current = false;
+
+        gif.on('finished', (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `scriptmotion-${Date.now()}.gif`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          setIsRecording(false);
+
+          mixpanel.track('GIF Downloaded', {
+            textLength: text.length,
+            font: fonts.find(f => f.path === fontUrl)?.name || 'Brittany Signature',
+            speed: speed,
+          });
+          mixpanel.people.increment('gifs_exported');
+          mixpanel.people.set({ last_export: new Date().toISOString() });
+        });
+
+        gif.render();
+      }, estimatedDuration + 500);
+
+    } catch (error) {
+      console.error('Error exporting GIF:', error);
+      alert('Failed to export GIF: ' + error.message);
+      gifCapturingRef.current = false;
+      setIsRecording(false);
+    }
   };
 
   const handleExportVideo = async (transparentBg = false) => {
@@ -198,6 +288,7 @@ export default function ScriptMotion() {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
+      gifCapturingRef.current = false;
     };
   }, []);
 
@@ -435,7 +526,7 @@ export default function ScriptMotion() {
                   onClick={() => handleExportVideo(false)}
                   disabled={isRecording}
                 >
-                  {isRecording ? 'Exporting...' : 'Export as Video'}
+                  {isRecording ? 'Exporting...' : 'Export as Video (.webm)'}
                 </button>
                 <button
                   className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -443,6 +534,14 @@ export default function ScriptMotion() {
                   disabled={isRecording}
                 >
                   {isRecording ? 'Exporting...' : 'Export as Video (Transparent)'}
+                </button>
+                <div className="my-1 border-t border-white/10" />
+                <button
+                  className="block w-full text-left py-2.5 px-3 bg-transparent border-none text-[var(--text-secondary)] text-[13px] font-[var(--font-inter)] cursor-pointer rounded-lg transition-all duration-100 hover:bg-white/10 hover:text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleExportGif}
+                  disabled={isRecording}
+                >
+                  {isRecording ? 'Exporting...' : 'Export as GIF'}
                 </button>
               </div>
             </div>
