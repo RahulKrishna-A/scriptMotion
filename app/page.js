@@ -10,7 +10,7 @@ const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
 });
 
 export default function ScriptMotion() {
-  const [text, setText] = useState('ScriptMotion');
+  const [text, setText] = useState('Type your text here');
   const [fontUrl, setFontUrl] = useState('/fonts/BrittanySignature.ttf');
   const [speed, setSpeed] = useState(1);
   const [textColor, setTextColor] = useState('#ffa200');
