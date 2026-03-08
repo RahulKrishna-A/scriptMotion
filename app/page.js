@@ -10,7 +10,7 @@ const Penflow = dynamic(() => import('penflow/react').then((m) => m.Penflow), {
 });
 
 export default function ScriptMotion() {
-  const [text, setText] = useState('Type your text here');
+  const [text, setText] = useState('Type here');
   const [fontUrl, setFontUrl] = useState('/fonts/DancingScript-VariableFont_wght.ttf');
   const [speed, setSpeed] = useState(1);
   const [textColor, setTextColor] = useState('#ffa200');
