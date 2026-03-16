@@ -549,6 +549,13 @@ export default function ScriptMotion() {
         </div>
       </section>
 
+      {/* Small device notice */}
+      <div className="lg:hidden w-full max-w-[800px] mx-auto px-4 pb-4 flex justify-center">
+        <span className="font-[var(--font-inter)] text-[11px] text-[var(--text-secondary)] bg-white/5 border border-white/10 rounded-full px-3.5 py-1.5 tracking-wide">
+          ✦ best viewed on larger screens
+        </span>
+      </div>
+
       {/* Footer Credits */}
       <footer className="w-full max-w-[800px] mx-auto px-4 pb-8 text-center">
         <p className="font-[var(--font-inter)] text-[12px] sm:text-[13px] text-[var(--text-secondary)] mb-2">
