@@ -581,6 +581,16 @@ export default function ScriptMotion() {
             Cristi
           </a>
         </p>
+        <p className="font-[var(--font-inter)] text-[12px] sm:text-[13px] text-[var(--text-secondary)] mt-2">
+          <a
+            href="https://github.com/RahulKrishna-A/scriptMotion"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--text-primary)] hover:text-[var(--accent-orange)] hover:underline transition-colors duration-200"
+          >
+            Clone it here
+          </a>
+        </p>
       </footer>
     </div>
   );
